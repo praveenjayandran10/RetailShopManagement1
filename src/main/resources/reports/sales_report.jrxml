@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport name="sales_report"
+              language="java"
+              pageWidth="595"
+              pageHeight="842"
+              columnWidth="555"
+              leftMargin="20"
+              rightMargin="20"
+              topMargin="20"
+              bottomMargin="20"
+              whenNoDataType="AllSectionsNoDetail">
+
+    <style name="Default"
+           default="true"
+           fontName="SansSerif"
+           fontSize="10.0"/>
+
+    <parameter name="FROM_DATE"
+               class="java.sql.Timestamp"/>
+
+    <parameter name="TO_DATE_EXCLUSIVE"
+               class="java.sql.Timestamp"/>
+
+    <query language="sql"><![CDATA[
+        SELECT
+            s.sale_id,
+            s.sale_date,
+            c.name AS customer_name,
+            e.name AS employee_name,
+            p.name AS product_name,
+            si.quantity,
+            si.unit_price,
+            si.quantity * si.unit_price AS line_total
+        FROM sales s
+        JOIN customers c
+            ON c.customer_id = s.customer_id
+        JOIN employees e
+            ON e.employee_id = s.employee_id
+        JOIN sale_items si
+            ON si.sale_id = s.sale_id
+        JOIN products p
+            ON p.product_id = si.product_id
+        WHERE s.sale_date >= $P{FROM_DATE}
+          AND s.sale_date < $P{TO_DATE_EXCLUSIVE}
+        ORDER BY s.sale_id, si.sale_item_id
+    ]]></query>
+
+    <field name="sale_id" class="java.lang.Integer"/>
+    <field name="sale_date" class="java.sql.Timestamp"/>
+    <field name="customer_name" class="java.lang.String"/>
+    <field name="employee_name" class="java.lang.String"/>
+    <field name="product_name" class="java.lang.String"/>
+    <field name="quantity" class="java.lang.Integer"/>
+    <field name="unit_price" class="java.math.BigDecimal"/>
+    <field name="line_total" class="java.math.BigDecimal"/>
+
+    <variable name="GrandTotal"
+              class="java.math.BigDecimal"
+              calculation="Sum">
+        <expression><![CDATA[$F{line_total}]]></expression>
+    </variable>
+
+    <group name="SaleGroup"
+           reprintHeaderOnEachPage="true">
+
+        <expression><![CDATA[$F{sale_id}]]></expression>
+
+        <groupHeader>
+            <band height="108" splitType="Prevent">
+
+                <element kind="textField"
+                         x="0" y="8"
+                         width="150" height="20"
+                         bold="true">
+                    <expression><![CDATA[
+                        "Sale ID: " + $F{sale_id}
+                    ]]></expression>
+                </element>
+
+                <element kind="textField"
+                         x="300" y="8"
+                         width="255" height="20"
+                         pattern="yyyy-MM-dd HH:mm"
+                         hTextAlign="Right">
+                    <expression><![CDATA[
+                        $F{sale_date}
+                    ]]></expression>
+                </element>
+
+                <element kind="textField"
+                         x="0" y="32"
+                         width="555" height="24"
+                         textAdjust="StretchHeight">
+                    <expression><![CDATA[
+                        "Customer: " + $F{customer_name}
+                    ]]></expression>
+                </element>
+
+                <element kind="textField"
+                         x="0" y="59"
+                         width="555" height="24"
+                         positionType="Float"
+                         textAdjust="StretchHeight">
+                    <expression><![CDATA[
+                        "Cashier: " + $F{employee_name}
+                    ]]></expression>
+                </element>
+
+                <element kind="staticText"
+                         x="0" y="86"
+                         width="275" height="20"
+                         positionType="Float"
+                         bold="true">
+                    <text><![CDATA[Product]]></text>
+                </element>
+
+                <element kind="staticText"
+                         x="280" y="86"
+                         width="55" height="20"
+                         positionType="Float"
+                         hTextAlign="Right"
+                         bold="true">
+                    <text><![CDATA[Qty]]></text>
+                </element>
+
+                <element kind="staticText"
+                         x="335" y="86"
+                         width="100" height="20"
+                         positionType="Float"
+                         hTextAlign="Right"
+                         bold="true">
+                    <text><![CDATA[Unit Price]]></text>
+                </element>
+
+                <element kind="staticText"
+                         x="435" y="86"
+                         width="120" height="20"
+                         positionType="Float"
+                         hTextAlign="Right"
+                         bold="true">
+                    <text><![CDATA[Line Total]]></text>
+                </element>
+
+                <element kind="line"
+                         x="0" y="107"
+                         width="555" height="1"
+                         positionType="Float"/>
+
+            </band>
+        </groupHeader>
+    </group>
+
+    <title height="65">
+
+        <element kind="staticText"
+                 x="0" y="0"
+                 width="555" height="30"
+                 fontSize="18.0"
+                 bold="true"
+                 hTextAlign="Center">
+            <text><![CDATA[Retail Shop - Sales Report]]></text>
+        </element>
+
+        <element kind="textField"
+                 x="0" y="35"
+                 width="555" height="20"
+                 hTextAlign="Center">
+            <expression><![CDATA[
+                "From "
+                + new java.text.SimpleDateFormat("yyyy-MM-dd")
+                    .format($P{FROM_DATE})
+                + " to "
+                + new java.text.SimpleDateFormat("yyyy-MM-dd")
+                    .format(new java.util.Date(
+                        $P{TO_DATE_EXCLUSIVE}.getTime() - 1L
+                    ))
+            ]]></expression>
+        </element>
+
+    </title>
+
+    <detail>
+        <band height="24" splitType="Stretch">
+
+            <element kind="textField"
+                     x="0" y="2"
+                     width="275" height="20"
+                     textAdjust="StretchHeight">
+                <expression><![CDATA[
+                    $F{product_name}
+                ]]></expression>
+            </element>
+
+            <element kind="textField"
+                     x="280" y="2"
+                     width="55" height="20"
+                     hTextAlign="Right">
+                <expression><![CDATA[
+                    $F{quantity}
+                ]]></expression>
+            </element>
+
+            <element kind="textField"
+                     x="335" y="2"
+                     width="100" height="20"
+                     pattern="#,##0.00"
+                     hTextAlign="Right">
+                <expression><![CDATA[
+                    $F{unit_price}
+                ]]></expression>
+            </element>
+
+            <element kind="textField"
+                     x="435" y="2"
+                     width="120" height="20"
+                     pattern="#,##0.00"
+                     hTextAlign="Right">
+                <expression><![CDATA[
+                    $F{line_total}
+                ]]></expression>
+            </element>
+
+        </band>
+    </detail>
+
+    <pageFooter height="25">
+
+        <element kind="textField"
+                 x="435" y="5"
+                 width="120" height="20"
+                 hTextAlign="Right">
+            <expression><![CDATA[
+                "Page " + $V{PAGE_NUMBER}
+            ]]></expression>
+        </element>
+
+    </pageFooter>
+
+    <summary height="65">
+
+        <element kind="line"
+                 x="0" y="5"
+                 width="555" height="1"/>
+
+        <element kind="staticText"
+                 x="285" y="15"
+                 width="150" height="25"
+                 fontSize="12.0"
+                 bold="true"
+                 hTextAlign="Right">
+            <text><![CDATA[Total Sales:]]></text>
+        </element>
+
+        <element kind="textField"
+                 x="435" y="15"
+                 width="120" height="25"
+                 pattern="#,##0.00"
+                 fontSize="12.0"
+                 bold="true"
+                 hTextAlign="Right">
+            <expression><![CDATA[
+                $V{GrandTotal} == null
+                    ? java.math.BigDecimal.ZERO
+                    : $V{GrandTotal}
+            ]]></expression>
+        </element>
+
+        <element kind="textField"
+                 x="0" y="43"
+                 width="555" height="20">
+            <expression><![CDATA[
+                $V{REPORT_COUNT}.intValue() == 0
+                    ? "No sales found for the selected dates."
+                    : ""
+            ]]></expression>
+        </element>
+
+    </summary>
+
+</jasperReport>
